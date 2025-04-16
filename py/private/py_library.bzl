@@ -57,7 +57,10 @@ def _extract_distribution_name(req):
 def _make_virtual_depset(ctx):
     return depset(
         order = "postorder",
-        direct = getattr(ctx.attr, "virtual_deps", []),
+        direct = [
+            struct(dep_spec = dep, origin = ctx.label)
+            for dep in getattr(ctx.attr, "virtual_deps", [])
+        ],
         transitive = [
             target[PyVirtualInfo].dependencies
             for target in ctx.attr.deps
@@ -92,7 +95,7 @@ def _make_virtual_resolutions_depset(ctx):
 def _resolve_virtuals(ctx, ignore_missing = False):
     # GNG FIXME: this ignores the version constraints completely
     virtual = _make_virtual_depset(ctx).to_list()
-    virtual_distribution_name = [_extract_distribution_name(v) for v in virtual]
+    virtual_distribution_name = [_extract_distribution_name(v.dep_spec) for v in virtual]
     resolutions = _make_virtual_resolutions_depset(ctx).to_list()
 
     # GNG FIXME comment
