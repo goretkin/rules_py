@@ -45,6 +45,7 @@ load("//py/private:py_pytest_main.bzl", _py_pytest_main = "py_pytest_main")
 load("//py/private:py_unpacked_wheel.bzl", _py_unpacked_wheel = "py_unpacked_wheel")
 load("//py/private:py_venv.bzl", _py_venv = "py_venv")
 load("//py/private:virtual.bzl", _resolutions = "resolutions")
+load("//py/private:py_collect_virtual_deps.bzl", _py_collect_virtual_deps = "py_collect_virtual_deps")
 
 py_pex_binary = _py_pex_binary
 py_pytest_main = _py_pytest_main
@@ -58,6 +59,7 @@ py_unpacked_wheel = _py_unpacked_wheel
 py_image_layer = _py_image_layer
 
 resolutions = _resolutions
+py_collect_virtual_deps = _py_collect_virtual_deps
 
 def _py_binary_or_test(name, rule, srcs, main, data = [], deps = [], resolutions = {}, **kwargs):
     # Compatibility with rules_python, see docs in py_executable.bzl

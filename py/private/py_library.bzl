@@ -283,3 +283,8 @@ py_library = rule(
 
 # Export for testing
 extract_distribution_name = _extract_distribution_name
+
+# Export for collecting, TODO reconsider if we want this exported
+
+make_virtual_depset = _make_virtual_depset
+make_virtual_resolutions_depset = _make_virtual_resolutions_depset

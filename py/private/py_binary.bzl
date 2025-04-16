@@ -3,9 +3,16 @@
 load("@aspect_bazel_lib//lib:expand_make_vars.bzl", "expand_locations", "expand_variables")
 load("@aspect_bazel_lib//lib:paths.bzl", "BASH_RLOCATION_FUNCTION", "to_rlocation_path")
 load("@rules_python//python:defs.bzl", "PyInfo")
+load("//py/private:providers.bzl", "PyVirtualInfo")
 load("//py/private:py_library.bzl", _py_library = "py_library_utils")
 load("//py/private:py_semantics.bzl", _py_semantics = "semantics")
 load("//py/private/toolchain:types.bzl", "PY_TOOLCHAIN", "VENV_TOOLCHAIN")
+
+
+load("//py/private:py_library.bzl", "make_virtual_depset", "make_virtual_resolutions_depset")
+
+_make_virtual_depset = make_virtual_depset
+_make_virtual_resolutions_depset = make_virtual_resolutions_depset
 
 def _dict_to_exports(env):
     return [
@@ -131,6 +138,12 @@ def _py_binary_rule_impl(ctx):
         RunEnvironmentInfo(
             environment = passed_env,
             inherited_environment = getattr(ctx.attr, "env_inherit", []),
+        ),
+
+        # TODO This provider and the util functions used to make it are not so private...
+        PyVirtualInfo(
+            dependencies = _make_virtual_depset(ctx),
+            resolutions = _make_virtual_resolutions_depset(ctx)
         ),
     ]
 

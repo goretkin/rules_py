@@ -1,0 +1,53 @@
+"""Rule to generate a requirements.txt file from the virtual dependencies of a `py_binary` / `py_test` target.
+
+This rule extracts the transitive closure of virtual dependencies from the given target,
+then writes them to a text file (by default 'requirements.txt').
+Each dependency is listed with a comment indicating its originating target.
+"""
+
+load("@bazel_skylib//lib:paths.bzl", "paths")
+load("//py/private:providers.bzl", "PyVirtualInfo")
+
+def _py_collect_virtual_deps_impl(ctx):
+    # The output file that will contain the requirements
+    output = ctx.actions.declare_file(ctx.attr.output_filename)
+    
+    # Lists to collect dependencies and their origins
+    deps_with_origins = []
+    
+    # Process each dependency
+    for dep in ctx.attr.deps:
+        if PyVirtualInfo in dep:
+            # Each virtual dep in PyVirtualInfo.dependencies
+            for vdep in dep[PyVirtualInfo].dependencies.to_list():
+                deps_with_origins.append((vdep, dep.label))
+    
+    # Format the output content
+    lines = []
+    for dep, origin in deps_with_origins:
+        lines.append("# From {}".format(origin))
+        lines.append(dep)
+        lines.append("")  # Empty line for readability
+    
+    # Write requirements to file
+    ctx.actions.write(
+        output = output,
+        content = "\n".join(lines),
+    )
+    
+    return [DefaultInfo(files = depset([output]))]
+
+py_collect_virtual_deps = rule(
+    implementation = _py_collect_virtual_deps_impl,
+    attrs = {
+        "deps": attr.label_list(
+            doc = "The python targets to extract virtual dependencies from.",
+            providers = [[PyVirtualInfo]],
+            mandatory = True,
+        ),
+        "output_filename": attr.string(
+            doc = "Name of the output requirements file.",
+            default = "requirements.txt",
+        ),
+    },
+)
