@@ -17,6 +17,7 @@ def _py_binary_rule_impl(ctx):
     venv_toolchain = ctx.toolchains[VENV_TOOLCHAIN]
     py_toolchain = _py_semantics.resolve_toolchain(ctx)
 
+    # GNG FIXME comment
     # Check for duplicate virtual dependency names. Those that map to the same resolution target would have been merged by the depset for us.
     virtual_resolution = _py_library.resolve_virtuals(ctx)
     imports_depset = _py_library.make_imports_depset(ctx, extra_imports_depsets = virtual_resolution.imports)

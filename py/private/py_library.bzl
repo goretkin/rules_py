@@ -28,6 +28,32 @@ def _make_srcs_depset(ctx):
         ],
     )
 
+def _extract_distribution_name(req):
+    """
+    Extracts the base distribution name from a Python name-based dependency specifier:
+
+    name_req      = name wsp* extras? wsp* versionspec? wsp* quoted_marker?
+
+    See: https://packaging.python.org/en/latest/specifications/dependency-specifiers/
+
+    Example: 'requests[security]>=2.0 ; python_version<3.8' → 'requests'
+
+    Note that this does not parse the whole specifier, it only extracts `name`.
+    It also does not validate that `name` is a valid distribution name.
+    """
+
+    version_operators = "<>=!~@"
+    req = req.strip()
+
+    for i in range(len(req)):
+        char = req[i]
+        # Determine if we've reached the end of the name
+        if char.isspace() or char == '[' or char in version_operators:
+            return req[:i]
+
+    # The whole string is the name
+    return req
+
 def _make_virtual_depset(ctx):
     return depset(
         order = "postorder",
@@ -64,9 +90,12 @@ def _make_virtual_resolutions_depset(ctx):
     )
 
 def _resolve_virtuals(ctx, ignore_missing = False):
+    # GNG FIXME: this ignores the version constraints completely
     virtual = _make_virtual_depset(ctx).to_list()
+    virtual_distribution_name = [_extract_distribution_name(v) for v in virtual]
     resolutions = _make_virtual_resolutions_depset(ctx).to_list()
 
+    # GNG FIXME comment
     # Check for duplicate virtual dependency names. Those that map to the same resolution target would have been merged by the depset for us.
     seen = {}
     v_srcs = []
@@ -86,7 +115,7 @@ def _resolve_virtuals(ctx, ignore_missing = False):
         if PyInfo in resolution.target:
             v_imports.append(resolution.target[PyInfo].imports)
 
-    missing = sets.to_list(sets.difference(sets.make(virtual), sets.make(seen.keys())))
+    missing = sets.to_list(sets.difference(sets.make(virtual_distribution_name), sets.make(seen.keys())))
     if len(missing) > 0 and not ignore_missing:
         fail("The following dependencies were marked as virtual, but no concrete label providing them was given: {}".format(", ".join(missing)))
 
@@ -251,3 +280,6 @@ py_library = rule(
     }, **py_library_utils.attrs),
     provides = py_library_utils.py_library_providers,
 )
+
+# Export for testing
+extract_distribution_name = _extract_distribution_name
