@@ -47,8 +47,9 @@ def _extract_distribution_name(req):
 
     for i in range(len(req)):
         char = req[i]
+
         # Determine if we've reached the end of the name
-        if char.isspace() or char == '[' or char in version_operators:
+        if char.isspace() or char == "[" or char in version_operators:
             return req[:i]
 
     # The whole string is the name
